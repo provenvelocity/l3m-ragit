@@ -4,17 +4,38 @@ Ragit runs in the VS Code workspace extension host. On a local folder, that is y
 
 ## 1. Install the extension
 
-Download `ragit-0.2.0.vsix` from a successful GitHub Actions run, or package it from a clone:
+Download `ragit-0.2.0.vsix` from a successful GitHub Actions run, or create a first checkout:
 
 ```bash
 git clone https://github.com/provenvelocity/ragit.git
 cd ragit
+```
+
+When the directory already exists, update it instead of cloning again:
+
+```bash
+git -C ragit pull --ff-only
+cd ragit
+```
+
+Package and install into VS Code Stable:
+
+```bash
 npm ci
 npm run package
 code --install-extension ./ragit-0.2.0.vsix
+```
 
-# Install into VS Code Insiders instead of Stable
+Install into VS Code Insiders separately:
+
+```bash
 code-insiders --install-extension ./ragit-0.2.0.vsix
+```
+
+On macOS, when `code-insiders` is not on `PATH`, invoke the CLI inside the application bundle:
+
+```bash
+"/Applications/Visual Studio Code - Insiders.app/Contents/Resources/app/bin/code" --install-extension ./ragit-0.2.0.vsix
 ```
 
 Stable and Insiders keep separate extension installations, settings, and profiles. You can also open the Extensions view in either edition, choose **Install from VSIX...**, and select the same file. For Remote SSH, install the VSIX in the remote VS Code window by choosing **Install in SSH: host** from the Extensions view.

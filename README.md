@@ -14,17 +14,38 @@ For Remote SSH, Dev Containers, and Codespaces, install the extension on the rem
 
 ## Getting started
 
-Install the packaged extension:
+For a first checkout:
 
 ```bash
 git clone https://github.com/provenvelocity/ragit.git
 cd ragit
+```
+
+If the `ragit` directory already exists, update it instead:
+
+```bash
+git -C ragit pull --ff-only
+cd ragit
+```
+
+Package and install into VS Code Stable:
+
+```bash
 npm ci
 npm run package
 code --install-extension ./ragit-0.2.0.vsix
+```
 
-# VS Code Insiders keeps a separate extension installation
+Install the same VSIX into VS Code Insiders:
+
+```bash
 code-insiders --install-extension ./ragit-0.2.0.vsix
+```
+
+On macOS, if `code-insiders` is not on `PATH`, use:
+
+```bash
+"/Applications/Visual Studio Code - Insiders.app/Contents/Resources/app/bin/code" --install-extension ./ragit-0.2.0.vsix
 ```
 
 Reload VS Code and open a repository. Ragit automatically:
