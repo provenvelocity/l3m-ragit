@@ -22,6 +22,9 @@ cd ragit
 npm ci
 npm run package
 code --install-extension ./ragit-0.2.0.vsix
+
+# VS Code Insiders keeps a separate extension installation
+code-insiders --install-extension ./ragit-0.2.0.vsix
 ```
 
 Reload VS Code and open a repository. Ragit automatically:

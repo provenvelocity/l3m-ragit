@@ -12,9 +12,12 @@ cd ragit
 npm ci
 npm run package
 code --install-extension ./ragit-0.2.0.vsix
+
+# Install into VS Code Insiders instead of Stable
+code-insiders --install-extension ./ragit-0.2.0.vsix
 ```
 
-For Remote SSH, install the VSIX in the remote VS Code window by choosing **Install in SSH: host** from the Extensions view.
+Stable and Insiders keep separate extension installations, settings, and profiles. You can also open the Extensions view in either edition, choose **Install from VSIX...**, and select the same file. For Remote SSH, install the VSIX in the remote VS Code window by choosing **Install in SSH: host** from the Extensions view.
 
 ## 2. Let Ragit select and run the backend
 
