@@ -28,3 +28,5 @@ The extension currently uses these upstream tools:
 - `get_code_snippet`
 
 Release 0.1.0 is integration-tested with codebase-memory-mcp 0.11.0. A future release should add explicit capability/version negotiation before widening backend compatibility.
+
+The default backend is a native process. The optional Docker wrapper maintains one long-lived container per workspace, bind-mounts that workspace read-only at the same absolute path, and persists the CBM cache. Each CLI or MCP invocation enters that container with `docker exec`, preserving the upstream coordination daemon across calls.

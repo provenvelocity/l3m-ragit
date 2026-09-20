@@ -27,6 +27,10 @@ jobs:
           mkdir cbm
           tar -xzf codebase-memory-mcp-linux-amd64-portable.tar.gz -C cbm
           CBM_TEST_BINARY="$PWD/cbm/codebase-memory-mcp" npm run test:backend
+      - name: Test Docker backend
+        run: |
+          npm run docker:build
+          CBM_TEST_BINARY="$PWD/docker/cbm-docker" npm run test:backend
       - run: npm run package
       - uses: actions/upload-artifact@v7
         with:

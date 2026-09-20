@@ -1,5 +1,10 @@
 # Changelog
 
+## Unreleased
+
+- Add explicit native/npm and Docker getting-started instructions.
+- Add a checksum-verified, multi-architecture backend image and persistent per-workspace Docker wrapper.
+
 ## 0.1.0
 
 - Index each enabled workspace using codebase-memory-mcp.

@@ -50,6 +50,8 @@
     "test": "node --test test/*.test.ts",
     "test:backend": "node scripts/backend-smoke.mjs",
     "test:host": "node scripts/host-smoke.mjs",
+    "docker:build": "docker build -f docker/Dockerfile -t l3m-ragit/codebase-memory-mcp:0.11.0 .",
+    "docker:smoke": "docker/cbm-docker --version",
     "vscode:prepublish": "npm run check && npm run build",
     "package": "vsce package --no-dependencies --allow-missing-repository"
   },

@@ -17,13 +17,36 @@ Saving a file updates the index. It does **not** send the repository to a model.
 
 For Remote SSH, Dev Containers, and Codespaces, install this extension and codebase-memory-mcp on the remote workspace host.
 
-## Install and use
+## Getting started
 
-1. Install codebase-memory-mcp and confirm `codebase-memory-mcp --version` works in the VS Code workspace host.
-2. Install the packaged VSIX from this repository's release or build it with `npm run package`.
-3. Open a repository. Ragit begins an initial index in the background.
-4. Check **L3M Ragit: Show Index Status** from the Command Palette.
-5. In Copilot Chat, ask `@ragit explain how authentication flows through this repository`.
+The recommended backend is the upstream native executable. The npm package downloads and launches that verified native runtime; it is not a JavaScript implementation of the indexer.
+
+```bash
+npm install --global codebase-memory-mcp@0.11.0
+codebase-memory-mcp --version
+
+git clone https://github.com/provenvelocity/l3m-ragit.git
+cd l3m-ragit
+npm ci
+npm run package
+code --install-extension ./l3m-ragit-0.1.0.vsix
+```
+
+Reload VS Code, open a repository, and run **L3M Ragit: Check Backend** followed by **L3M Ragit: Show Index Status**. Then ask Copilot Chat:
+
+```text
+@ragit Explain how authentication flows through this repository and cite the relevant files.
+```
+
+A pinned Docker option is also included for Linux amd64/arm64 and Docker Desktop on macOS. It uses a persistent per-workspace container so the upstream daemon and cache remain valid:
+
+```bash
+docker build -f docker/Dockerfile -t l3m-ragit/codebase-memory-mcp:0.11.0 .
+chmod +x "$PWD/docker/cbm-docker"
+"$PWD/docker/cbm-docker" --version
+```
+
+Then set `l3mRagit.backendPath` to the absolute path of `docker/cbm-docker`. See the **[complete getting-started guide](docs/getting-started.md)** for native installer commands, Docker operation, Remote SSH/DGX placement, verification, and troubleshooting.
 
 Copilot agent mode can also invoke these tools:
 
