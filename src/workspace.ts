@@ -17,6 +17,6 @@ export function selectWorkspace<T extends { root: string; name: string }>(items:
     : activeRoot ? items.filter(w => w.root === activeRoot) : items;
   if (matches.length === 1) return matches[0];
   if (!requested && items.length === 1) return items[0];
-  if (!items.length) throw new Error('No enabled workspace. Open a folder and enable L3M Ragit.');
+  if (!items.length) throw new Error('No enabled workspace. Open a folder and enable Ragit.');
   throw new Error(`Choose an unambiguous workspace by absolute path: ${items.map(w => w.root).join(', ')}`);
 }

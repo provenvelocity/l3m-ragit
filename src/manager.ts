@@ -1,4 +1,5 @@
 import * as vscode from 'vscode';
+import { join } from 'node:path';
 import { Backend, type BackendApi, qualifiedNames, resultText } from './backend.js';
 import { IndexQueue, type IndexState } from './indexQueue.js';
 import { projectName, selectWorkspace, shouldObserve } from './workspace.js';
@@ -12,12 +13,13 @@ interface WorkspaceRuntime {
   name: string;
   project: string;
   backend: BackendApi;
+  command: { executable: string; args: string[]; env: Record<string, string>; managed: boolean };
   queue: IndexQueue;
   watcher: vscode.FileSystemWatcher;
 }
 
 function config<T>(key: string, folder?: vscode.WorkspaceFolder): T {
-  return vscode.workspace.getConfiguration('l3mRagit', folder?.uri).get<T>(key)!;
+  return vscode.workspace.getConfiguration('ragit', folder?.uri).get<T>(key)!;
 }
 
 function cancellationSignal(token: vscode.CancellationToken): AbortSignal {
@@ -32,11 +34,11 @@ export class WorkspaceManager implements vscode.Disposable {
   private readonly disposables: vscode.Disposable[] = [];
   private readonly statusBar = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left, 50);
 
-  constructor(private readonly output: vscode.OutputChannel) {
-    this.statusBar.command = 'l3mRagit.status';
+  constructor(private readonly output: vscode.OutputChannel, private readonly extensionPath: string) {
+    this.statusBar.command = 'ragit.status';
     this.disposables.push(this.statusBar, vscode.workspace.onDidChangeWorkspaceFolders(() => this.rebuild()),
       vscode.workspace.onDidChangeConfiguration(e => {
-        if (e.affectsConfiguration('l3mRagit')) this.rebuild();
+        if (e.affectsConfiguration('ragit')) this.rebuild();
       }));
     this.rebuild();
   }
@@ -56,8 +58,21 @@ export class WorkspaceManager implements vscode.Disposable {
     for (const folder of vscode.workspace.workspaceFolders ?? []) {
       if (folder.uri.scheme !== 'file' || !config<boolean>('enabled', folder)) continue;
       const root = folder.uri.fsPath;
+      const override = config<string>('backendPath', folder).trim();
+      const command = override
+        ? { executable: override, args: [], env: {}, managed: false }
+        : {
+            executable: process.execPath,
+            args: [join(this.extensionPath, 'dist', 'backend-launcher.cjs')],
+            env: {
+              ELECTRON_RUN_AS_NODE: '1',
+              RAGIT_BACKEND_MODE: config<string>('backendMode', folder),
+              RAGIT_DOCKERFILE: join(this.extensionPath, 'docker', 'Dockerfile'),
+            },
+            managed: true,
+          };
       const backend = new Backend({
-        executable: config<string>('backendPath', folder),
+        ...command,
         timeoutMs: config<number>('backendTimeoutSeconds', folder) * 1000,
       });
       const runtime = {} as WorkspaceRuntime;
@@ -73,7 +88,7 @@ export class WorkspaceManager implements vscode.Disposable {
         if (shouldObserve(root, uri.fsPath)) queue.markChanged();
       };
       watcher.onDidCreate(changed); watcher.onDidChange(changed); watcher.onDidDelete(changed);
-      Object.assign(runtime, { folder, root, name: folder.name, project: projectName(root), backend, queue, watcher });
+      Object.assign(runtime, { folder, root, name: folder.name, project: projectName(root), backend, command, queue, watcher });
       this.runtimes.push(runtime);
       queue.schedule();
     }
@@ -120,7 +135,7 @@ export class WorkspaceManager implements vscode.Disposable {
   }
 
   statusText(): string {
-    if (!this.runtimes.length) return 'L3M Ragit: no enabled file workspace.';
+    if (!this.runtimes.length) return 'Ragit: no enabled file workspace.';
     return this.runtimes.map(runtime => {
       const s = runtime.queue.snapshot();
       return `${runtime.name}\n  root: ${runtime.root}\n  project: ${runtime.project}\n  state: ${s.phase}\n  indexed revision: ${s.indexedRevision}/${s.revision}${s.lastIndexedAt ? `\n  completed: ${s.lastIndexedAt}` : ''}${s.error ? `\n  error: ${s.error}` : ''}`;
@@ -132,9 +147,9 @@ export class WorkspaceManager implements vscode.Disposable {
     return this.runtimes.map(runtime => {
       const definition = new vscode.McpStdioServerDefinition(
         `Ragit upstream: ${runtime.name}`,
-        config<string>('backendPath', runtime.folder),
-        ['--tool-profile=analysis'],
-        { CBM_ALLOWED_ROOT: runtime.root },
+        runtime.command.executable,
+        [...runtime.command.args, '--tool-profile=analysis'],
+        { ...runtime.command.env, CBM_ALLOWED_ROOT: runtime.root },
       );
       definition.cwd = runtime.folder.uri;
       return definition;

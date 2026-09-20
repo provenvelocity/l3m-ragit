@@ -1,13 +1,15 @@
 # Security
 
-L3M Ragit reads source code from the open workspace and passes retrieved excerpts to the model selected in VS Code. Teams must configure model providers according to their source-code handling policies.
+Ragit reads source code from the open workspace and passes retrieved excerpts to the model selected in VS Code. Teams must configure model providers according to their source-code handling policies.
 
 The extension:
 
 - runs only in trusted, filesystem-backed workspaces;
 - starts backend commands without a shell;
 - sets `CBM_ALLOWED_ROOT` for extension-owned backend calls;
-- does not bundle or silently download codebase-memory-mcp;
+- builds the Docker backend only when auto/Docker mode needs it, pins version 0.11.0, and verifies the official release checksum;
+- uses the exact npm package version 0.11.0 when npm fallback must fetch a runtime;
+- mounts source read-only in managed containers and keeps graph data in a separate cache;
 - does not include unsaved buffers in the index;
 - does not send model requests merely because a file was saved.
 

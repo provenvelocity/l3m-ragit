@@ -1,9 +1,11 @@
 # Changelog
 
-## Unreleased
+## 0.2.0
 
+- Rename the extension and repository to Ragit.
+- Make the extension manage backend selection: Docker first, npm/native PATH fallback, then a clear failure.
 - Add explicit native/npm and Docker getting-started instructions.
-- Add a checksum-verified, multi-architecture backend image and persistent per-workspace Docker wrapper.
+- Add a checksum-verified, multi-architecture backend image and persistent per-workspace Docker runtime.
 
 ## 0.1.0
 

@@ -20,19 +20,23 @@ jobs:
       - run: npm run check
       - run: npm test
       - run: npm run build
-      - name: Test codebase-memory-mcp integration
+      - run: npm run test:launcher-failure
+      - name: Test managed npm fallback
         run: |
-          curl -fsSLO https://github.com/DeusData/codebase-memory-mcp/releases/download/v0.11.0/codebase-memory-mcp-linux-amd64-portable.tar.gz
-          echo "1f9e8293eb2bc5c05cfa27a7e8fc033da6d729ffad525ccfcdaa3fd606306683  codebase-memory-mcp-linux-amd64-portable.tar.gz" | sha256sum --check
-          mkdir cbm
-          tar -xzf codebase-memory-mcp-linux-amd64-portable.tar.gz -C cbm
-          CBM_TEST_BINARY="$PWD/cbm/codebase-memory-mcp" npm run test:backend
+          RAGIT_DOCKER_COMMAND=ragit-test-missing-docker \
+            RAGIT_NATIVE_COMMAND=ragit-test-missing-native \
+            CBM_TEST_BINARY="$(command -v node)" \
+            CBM_TEST_LAUNCHER="$PWD/dist/backend-launcher.cjs" \
+            npm run test:backend
       - name: Test Docker backend
         run: |
           npm run docker:build
-          CBM_TEST_BINARY="$PWD/docker/cbm-docker" npm run test:backend
+          RAGIT_BACKEND_MODE=docker \
+            CBM_TEST_BINARY="$(command -v node)" \
+            CBM_TEST_LAUNCHER="$PWD/dist/backend-launcher.cjs" \
+            npm run test:backend
       - run: npm run package
       - uses: actions/upload-artifact@v7
         with:
-          name: l3m-ragit-vsix
-          path: l3m-ragit-*.vsix
+          name: ragit-vsix
+          path: ragit-*.vsix

@@ -4,9 +4,13 @@ import { rm } from 'node:fs/promises';
 await rm('dist', { recursive: true, force: true });
 
 await esbuild.build({
-  entryPoints: ['src/extension.ts'],
+  entryPoints: {
+    extension: 'src/extension.ts',
+    'backend-launcher': 'src/backendLauncher.ts',
+  },
   bundle: true,
-  outfile: 'dist/extension.cjs',
+  outdir: 'dist',
+  outExtension: { '.js': '.cjs' },
   platform: 'node',
   format: 'cjs',
   target: 'node24',

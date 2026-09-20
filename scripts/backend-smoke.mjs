@@ -4,6 +4,7 @@ import { spawnSync } from 'node:child_process';
 
 const executable = process.env.CBM_TEST_BINARY;
 if (!executable) throw new Error('Set CBM_TEST_BINARY to a codebase-memory-mcp executable.');
+const prefixArgs = process.env.CBM_TEST_LAUNCHER ? [resolve(process.env.CBM_TEST_LAUNCHER)] : [];
 const root = resolve('.test-work/backend-smoke');
 const cache = resolve('.test-work/cbm-cache');
 await mkdir(join(root, 'src'), { recursive: true });
@@ -12,7 +13,7 @@ await writeFile(join(root, 'src', 'math.ts'), 'export function add(left: number,
 await writeFile(join(root, 'package.json'), '{"name":"ragit-backend-smoke"}\n');
 
 function tool(name, args) {
-  const result = spawnSync(executable, ['cli', '--quiet', '--json', name], {
+  const result = spawnSync(executable, [...prefixArgs, 'cli', '--quiet', '--json', name], {
     cwd: root, input: JSON.stringify(args), encoding: 'utf8', timeout: 120000,
     env: { ...process.env, CBM_ALLOWED_ROOT: root, CBM_CACHE_DIR: cache },
   });

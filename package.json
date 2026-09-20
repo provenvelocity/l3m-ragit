@@ -1,8 +1,8 @@
 {
-  "name": "l3m-ragit",
-  "displayName": "L3M Ragit",
+  "name": "ragit",
+  "displayName": "Ragit",
   "description": "Current codebase context for GitHub Copilot through codebase-memory-mcp.",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "publisher": "provenvelocity",
   "private": true,
   "type": "module",
@@ -23,12 +23,12 @@
   ],
   "repository": {
     "type": "git",
-    "url": "https://github.com/provenvelocity/l3m-ragit.git"
+    "url": "https://github.com/provenvelocity/ragit.git"
   },
   "bugs": {
-    "url": "https://github.com/provenvelocity/l3m-ragit/issues"
+    "url": "https://github.com/provenvelocity/ragit/issues"
   },
-  "homepage": "https://github.com/provenvelocity/l3m-ragit#readme",
+  "homepage": "https://github.com/provenvelocity/ragit#readme",
   "main": "./dist/extension.cjs",
   "extensionKind": [
     "workspace"
@@ -49,47 +49,59 @@
     "build": "node scripts/build.mjs",
     "test": "node --test test/*.test.ts",
     "test:backend": "node scripts/backend-smoke.mjs",
+    "test:launcher-failure": "node scripts/launcher-failure-smoke.mjs",
     "test:host": "node scripts/host-smoke.mjs",
-    "docker:build": "docker build -f docker/Dockerfile -t l3m-ragit/codebase-memory-mcp:0.11.0 .",
-    "docker:smoke": "docker/cbm-docker --version",
+    "docker:build": "docker build -f docker/Dockerfile -t ragit/codebase-memory-mcp:0.11.0 .",
+    "docker:smoke": "node dist/backend-launcher.cjs --ragit-status",
     "vscode:prepublish": "npm run check && npm run build",
     "package": "vsce package --no-dependencies --allow-missing-repository"
   },
   "contributes": {
     "commands": [
       {
-        "command": "l3mRagit.reindex",
-        "title": "L3M Ragit: Index Workspace Now"
+        "command": "ragit.reindex",
+        "title": "Ragit: Index Workspace Now"
       },
       {
-        "command": "l3mRagit.status",
-        "title": "L3M Ragit: Show Index Status"
+        "command": "ragit.status",
+        "title": "Ragit: Show Index Status"
       },
       {
-        "command": "l3mRagit.logs",
-        "title": "L3M Ragit: Show Logs"
+        "command": "ragit.logs",
+        "title": "Ragit: Show Logs"
       },
       {
-        "command": "l3mRagit.checkBackend",
-        "title": "L3M Ragit: Check Backend"
+        "command": "ragit.checkBackend",
+        "title": "Ragit: Check Backend"
       }
     ],
     "configuration": {
-      "title": "L3M Ragit",
+      "title": "Ragit",
       "properties": {
-        "l3mRagit.enabled": {
+        "ragit.enabled": {
           "type": "boolean",
           "default": true,
           "scope": "resource",
           "description": "Index saved changes in this workspace folder."
         },
-        "l3mRagit.backendPath": {
+        "ragit.backendMode": {
           "type": "string",
-          "default": "codebase-memory-mcp",
+          "enum": [
+            "auto",
+            "docker",
+            "native"
+          ],
+          "default": "auto",
           "scope": "machine",
-          "description": "Executable path on the workspace host. Install codebase-memory-mcp separately."
+          "description": "Backend selection. Auto tries managed Docker, an installed codebase-memory-mcp command, then the pinned npm package through npx."
         },
-        "l3mRagit.debounceMs": {
+        "ragit.backendPath": {
+          "type": "string",
+          "default": "",
+          "scope": "machine",
+          "description": "Optional executable override. Leave empty for managed Docker with npm/PATH fallback."
+        },
+        "ragit.debounceMs": {
           "type": "number",
           "default": 1500,
           "minimum": 250,
@@ -97,7 +109,7 @@
           "scope": "resource",
           "description": "Combine nearby saved-file changes before indexing."
         },
-        "l3mRagit.indexMode": {
+        "ragit.indexMode": {
           "type": "string",
           "enum": [
             "full",
@@ -108,21 +120,21 @@
           "scope": "resource",
           "description": "Upstream indexing mode. Full includes the broadest discovery."
         },
-        "l3mRagit.backendTimeoutSeconds": {
+        "ragit.backendTimeoutSeconds": {
           "type": "number",
           "default": 300,
           "minimum": 10,
           "maximum": 3600,
           "description": "Maximum time for one backend operation."
         },
-        "l3mRagit.contextTokens": {
+        "ragit.contextTokens": {
           "type": "number",
           "default": 6000,
           "minimum": 512,
           "maximum": 32000,
           "description": "Target retrieved-context budget. Chat also checks the selected model's actual token count."
         },
-        "l3mRagit.nativeMcp": {
+        "ragit.nativeMcp": {
           "type": "boolean",
           "default": false,
           "description": "Also expose upstream MCP tools directly. These bypass Ragit's freshness checks."
@@ -131,9 +143,9 @@
     },
     "chatParticipants": [
       {
-        "id": "provenvelocity.l3m-ragit.chat",
+        "id": "provenvelocity.ragit.chat",
         "name": "ragit",
-        "fullName": "L3M Ragit",
+        "fullName": "Ragit",
         "description": "Ask about your code with freshly retrieved repository context.",
         "isSticky": true,
         "commands": [
@@ -146,13 +158,13 @@
     ],
     "mcpServerDefinitionProviders": [
       {
-        "id": "l3mRagit.mcp",
-        "label": "L3M Ragit: Upstream MCP"
+        "id": "ragit.mcp",
+        "label": "Ragit: Upstream MCP"
       }
     ],
     "languageModelTools": [
       {
-        "name": "l3m_ragit_context",
+        "name": "ragit_context",
         "displayName": "Retrieve Current Code Context",
         "toolReferenceName": "ragitContext",
         "canBeReferencedInPrompt": true,
@@ -175,7 +187,7 @@
         }
       },
       {
-        "name": "l3m_ragit_symbol",
+        "name": "ragit_symbol",
         "displayName": "Read Current Symbol",
         "toolReferenceName": "ragitSymbol",
         "canBeReferencedInPrompt": true,
@@ -198,7 +210,7 @@
         }
       },
       {
-        "name": "l3m_ragit_status",
+        "name": "ragit_status",
         "displayName": "Check Code Index Status",
         "toolReferenceName": "ragitStatus",
         "canBeReferencedInPrompt": true,

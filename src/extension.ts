@@ -45,34 +45,34 @@ async function fitContext(model: vscode.LanguageModelChat, task: string, context
 }
 
 export function activate(extensionContext: vscode.ExtensionContext): void {
-  const output = vscode.window.createOutputChannel('L3M Ragit', { log: true });
-  const manager = new WorkspaceManager(output);
+  const output = vscode.window.createOutputChannel('Ragit', { log: true });
+  const manager = new WorkspaceManager(output, extensionContext.extensionPath);
   const mcpChanged = new vscode.EventEmitter<void>();
   extensionContext.subscriptions.push(output, manager, mcpChanged,
-    vscode.lm.registerTool('l3m_ragit_context', new ContextTool(manager)),
-    vscode.lm.registerTool('l3m_ragit_symbol', new SymbolTool(manager)),
-    vscode.lm.registerTool('l3m_ragit_status', new StatusTool(manager)),
-    vscode.commands.registerCommand('l3mRagit.reindex', async () => {
-      await vscode.window.withProgress({ location: vscode.ProgressLocation.Notification, title: 'L3M Ragit: indexing workspace' }, () => manager.reindex());
-      vscode.window.showInformationMessage('L3M Ragit index is current for observed saved files.');
+    vscode.lm.registerTool('ragit_context', new ContextTool(manager)),
+    vscode.lm.registerTool('ragit_symbol', new SymbolTool(manager)),
+    vscode.lm.registerTool('ragit_status', new StatusTool(manager)),
+    vscode.commands.registerCommand('ragit.reindex', async () => {
+      await vscode.window.withProgress({ location: vscode.ProgressLocation.Notification, title: 'Ragit: indexing workspace' }, () => manager.reindex());
+      vscode.window.showInformationMessage('Ragit index is current for observed saved files.');
     }),
-    vscode.commands.registerCommand('l3mRagit.status', () => vscode.window.showInformationMessage(manager.statusText(), { modal: true })),
-    vscode.commands.registerCommand('l3mRagit.logs', () => output.show()),
-    vscode.commands.registerCommand('l3mRagit.checkBackend', async () => vscode.window.showInformationMessage(await manager.checkBackend(), { modal: true })),
-    vscode.workspace.onDidChangeConfiguration(e => { if (e.affectsConfiguration('l3mRagit.nativeMcp') || e.affectsConfiguration('l3mRagit.backendPath')) mcpChanged.fire(); }),
+    vscode.commands.registerCommand('ragit.status', () => vscode.window.showInformationMessage(manager.statusText(), { modal: true })),
+    vscode.commands.registerCommand('ragit.logs', () => output.show()),
+    vscode.commands.registerCommand('ragit.checkBackend', async () => vscode.window.showInformationMessage(await manager.checkBackend(), { modal: true })),
+    vscode.workspace.onDidChangeConfiguration(e => { if (e.affectsConfiguration('ragit.nativeMcp') || e.affectsConfiguration('ragit.backendPath') || e.affectsConfiguration('ragit.backendMode')) mcpChanged.fire(); }),
     vscode.workspace.onDidChangeWorkspaceFolders(() => mcpChanged.fire()),
-    vscode.lm.registerMcpServerDefinitionProvider('l3mRagit.mcp', {
+    vscode.lm.registerMcpServerDefinitionProvider('ragit.mcp', {
       onDidChangeMcpServerDefinitions: mcpChanged.event,
       provideMcpServerDefinitions: () => manager.mcpDefinitions(),
       resolveMcpServerDefinition: server => server,
     }),
   );
 
-  const participant = vscode.chat.createChatParticipant('provenvelocity.l3m-ragit.chat', async (request, _chatContext, stream, token) => {
+  const participant = vscode.chat.createChatParticipant('provenvelocity.ragit.chat', async (request, _chatContext, stream, token) => {
     if (request.command === 'status') { stream.markdown(`\n\n\`\`\`text\n${manager.statusText()}\n\`\`\``); return; }
     if (!request.prompt.trim()) { stream.markdown('Ask a question about the current codebase.'); return; }
     stream.progress('Refreshing saved changes and retrieving relevant code…');
-    const configuredBudget = vscode.workspace.getConfiguration('l3mRagit').get<number>('contextTokens', 6000);
+    const configuredBudget = vscode.workspace.getConfiguration('ragit').get<number>('contextTokens', 6000);
     const retrieved = await manager.context({ query: request.prompt }, token, configuredBudget);
     const bounded = await fitContext(request.model, request.prompt, retrieved, configuredBudget, token);
     const prompt = [

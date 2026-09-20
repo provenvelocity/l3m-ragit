@@ -4,8 +4,8 @@ import { join, resolve } from 'node:path';
 import { spawn } from 'node:child_process';
 
 const code = process.env.VSCODE_BIN ?? 'code';
-const extension = resolve('l3m-ragit-0.1.0.vsix');
-const profile = await mkdtemp(join(tmpdir(), 'l3m-ragit-profile-'));
+const extension = resolve('ragit-0.2.0.vsix');
+const profile = await mkdtemp(join(tmpdir(), 'ragit-profile-'));
 const log = join(profile, 'code.log');
 const args = ['--user-data-dir', profile, '--extensions-dir', join(profile, 'extensions'), '--install-extension', extension, '--force'];
 const child = spawn(code, args, { stdio: ['ignore', 'pipe', 'pipe'] });

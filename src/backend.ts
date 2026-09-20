@@ -1,6 +1,6 @@
 import { spawn } from 'node:child_process';
 
-export interface BackendOptions { executable: string; timeoutMs: number; env?: NodeJS.ProcessEnv }
+export interface BackendOptions { executable: string; args?: string[]; timeoutMs: number; env?: NodeJS.ProcessEnv; managed?: boolean }
 export interface ToolResult { content: Array<{ type: string; text?: string }>; structuredContent?: unknown; isError?: boolean }
 export interface BackendApi {
   call(root: string, tool: string, args: Record<string, unknown>, signal?: AbortSignal): Promise<ToolResult>;
@@ -92,15 +92,15 @@ export class Backend implements BackendApi {
   constructor(options: BackendOptions) { this.options = options; }
 
   async version(root: string, signal?: AbortSignal): Promise<string> {
-    return (await runProcess(this.options.executable, ['--version'], undefined,
-      { cwd: root, timeoutMs: 10000, env: this.options.env, signal })).trim();
+    return (await runProcess(this.options.executable, [...(this.options.args ?? []), this.options.managed ? '--ragit-status' : '--version'], undefined,
+      { cwd: root, timeoutMs: this.options.timeoutMs, env: { ...process.env, ...this.options.env }, signal })).trim();
   }
 
   async call(root: string, tool: string, args: Record<string, unknown>, signal?: AbortSignal): Promise<ToolResult> {
     if (!ALLOWED_TOOLS.has(tool)) throw new Error(`Unsupported backend tool: ${tool}`);
-    const raw = await runProcess(this.options.executable, ['cli', '--quiet', '--json', tool], JSON.stringify(args), {
+    const raw = await runProcess(this.options.executable, [...(this.options.args ?? []), 'cli', '--quiet', '--json', tool], JSON.stringify(args), {
       cwd: root, timeoutMs: this.options.timeoutMs,
-      env: { ...(this.options.env ?? process.env), CBM_ALLOWED_ROOT: root }, signal,
+      env: { ...process.env, ...this.options.env, CBM_ALLOWED_ROOT: root }, signal,
     });
     return decodeResult(raw);
   }
